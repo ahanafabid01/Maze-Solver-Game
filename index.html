@@ -236,6 +236,11 @@
             padding: 20px;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             border-radius: 15px;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         .dpad-row {
@@ -259,12 +264,17 @@
             align-items: center;
             justify-content: center;
             user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
         .dpad-button:active {
             transform: scale(0.95);
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.6);
+            background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
         }
 
         .dpad-button.invisible {
@@ -729,17 +739,45 @@
             drawMaze();
         });
 
-        // Mobile touch controls
-        document.getElementById('btnUp')?.addEventListener('click', () => movePlayer(0, -1));
-        document.getElementById('btnDown')?.addEventListener('click', () => movePlayer(0, 1));
-        document.getElementById('btnLeft')?.addEventListener('click', () => movePlayer(-1, 0));
-        document.getElementById('btnRight')?.addEventListener('click', () => movePlayer(1, 0));
+        // Mobile touch controls - using both touch and click events for compatibility
+        function setupMobileControl(btnId, dx, dy) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
 
-        // Prevent mobile scroll when touching buttons
-        document.querySelectorAll('.dpad-button').forEach(btn => {
+            // Handle touch events (mobile)
             btn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
             });
+
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                movePlayer(dx, dy);
+            });
+
+            // Handle click events (desktop/fallback)
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                movePlayer(dx, dy);
+            });
+        }
+
+        setupMobileControl('btnUp', 0, -1);
+        setupMobileControl('btnDown', 0, 1);
+        setupMobileControl('btnLeft', -1, 0);
+        setupMobileControl('btnRight', 1, 0);
+
+        // Prevent mobile scroll when touching d-pad area
+        document.querySelectorAll('.dpad-button').forEach(btn => {
+            btn.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            });
+        });
+
+        // Prevent context menu on long press
+        document.querySelector('.dpad-container')?.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
         });
 
         // Generate initial maze
