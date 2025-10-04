@@ -31,5 +31,5 @@ It’s designed with **smooth animations**, **dynamic logic**, and **colorful vi
 
 ---
 
-## 📂 Project Structure
+
 
