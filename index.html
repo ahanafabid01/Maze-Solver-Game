@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Solver Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        label {
+            color: #333;
+            font-weight: 600;
+        }
+
+        select, input[type="number"] {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:hover, input[type="number"]:hover {
+            border-color: #667eea;
+        }
+
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[type="number"] {
+            width: 80px;
+        }
+
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .maze-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            overflow: auto;
+            max-width: 100%;
+        }
+
+        #mazeCanvas {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .instructions {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .instructions h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .key-hints {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .key-hint {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .victory-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            z-index: 1000;
+            animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .victory-message h2 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .victory-message p {
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .mobile-controls {
+            display: block;
+            margin-top: 20px;
+        }
+
+        .dpad-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+        }
+
+        .dpad-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .dpad-button {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .dpad-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.6);
+        }
+
+        .dpad-button.invisible {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .subtitle {
+                font-size: 0.9em;
+            }
+
+            .controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .control-group {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            button {
+                width: 100%;
+                padding: 15px;
+            }
+
+            .stats {
+                flex-direction: row;
+                gap: 10px;
+                padding: 12px;
+            }
+
+            .stat-item {
+                flex: 1;
+            }
+
+            .stat-label {
+                font-size: 0.8em;
+            }
+
+            .stat-value {
+                font-size: 1.2em;
+            }
+
+            .maze-container {
+                margin-bottom: 15px;
+            }
+
+            .instructions {
+                padding: 12px;
+            }
+
+            .instructions h3 {
+                font-size: 1em;
+                margin-bottom: 8px;
+            }
+
+            .instructions p {
+                font-size: 0.9em;
+            }
+
+            .key-hints {
+                display: none;
+            }
+
+            .mobile-controls {
+                display: block;
+            }
+
+            .victory-message {
+                width: 90%;
+                padding: 30px 20px;
+            }
+
+            .victory-message h2 {
+                font-size: 2em;
+            }
+
+            .victory-message p {
+                font-size: 1em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .container {
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 1.1em;
+            }
+
+            .dpad-button {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Maze Solver</h1>
+            <p class="subtitle">Navigate through the maze to reach the goal!</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label>Size:</label>
+                <input type="number" id="mazeSize" min="5" max="50" value="15">
+            </div>
+            <div class="control-group">
+                <label>Difficulty:</label>
+                <select id="difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </div>
+            <button onclick="generateMaze()">Generate New Maze</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">Moves</div>
+                <div class="stat-value" id="moves">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Time</div>
+                <div class="stat-value" id="time">0:00</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Best Moves</div>
+                <div class="stat-value" id="bestMoves">-</div>
+            </div>
+        </div>
+
+        <div class="maze-container">
+            <canvas id="mazeCanvas"></canvas>
+        </div>
+
+        <div class="instructions">
+            <h3>How to Play</h3>
+            <p>Use arrow keys or WASD to move the blue player to the green goal. The maze is generated using a randomized algorithm. Try to complete it in the fewest moves possible!</p>
+            <div class="key-hints">
+                <span class="key-hint">↑ W - Up</span>
+                <span class="key-hint">↓ S - Down</span>
+                <span class="key-hint">← A - Left</span>
+                <span class="key-hint">→ D - Right</span>
+            </div>
+        </div>
+
+        <div class="mobile-controls">
+            <div class="dpad-container">
+                <div class="dpad-row">
+                    <button class="dpad-button invisible"></button>
+                    <button class="dpad-button" id="btnUp">↑</button>
+                    <button class="dpad-button invisible"></button>
+                </div>
+                <div class="dpad-row">
+                    <button class="dpad-button" id="btnLeft">←</button>
+                    <button class="dpad-button invisible"></button>
+                    <button class="dpad-button" id="btnRight">→</button>
+                </div>
+                <div class="dpad-row">
+                    <button class="dpad-button invisible"></button>
+                    <button class="dpad-button" id="btnDown">↓</button>
+                    <button class="dpad-button invisible"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="victory-message" id="victoryMessage">
+        <h2>🎉 Congratulations!</h2>
+        <p>You solved the maze!</p>
+        <p><strong>Moves:</strong> <span id="finalMoves"></span></p>
+        <p><strong>Time:</strong> <span id="finalTime"></span></p>
+        <button onclick="closeVictory()">Play Again</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mazeCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let maze = [];
+        let mazeSize = 15;
+        let cellSize = 30;
+        let playerPos = { x: 0, y: 0 };
+        let goalPos = { x: 0, y: 0 };
+        let moves = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let gameActive = false;
+        let bestMoves = localStorage.getItem('bestMoves') || null;
+
+        if (bestMoves) {
+            document.getElementById('bestMoves').textContent = bestMoves;
+        }
+
+        class Cell {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.walls = { top: true, right: true, bottom: true, left: true };
+                this.visited = false;
+            }
+        }
+
+        function initMaze() {
+            mazeSize = parseInt(document.getElementById('mazeSize').value);
+            maze = [];
+            for (let y = 0; y < mazeSize; y++) {
+                maze[y] = [];
+                for (let x = 0; x < mazeSize; x++) {
+                    maze[y][x] = new Cell(x, y);
+                }
+            }
+        }
+
+        function generateMaze() {
+            initMaze();
+            
+            const stack = [];
+            const startCell = maze[0][0];
+            startCell.visited = true;
+            stack.push(startCell);
+
+            while (stack.length > 0) {
+                const current = stack[stack.length - 1];
+                const neighbors = getUnvisitedNeighbors(current);
+
+                if (neighbors.length > 0) {
+                    const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    removeWall(current, next);
+                    next.visited = true;
+                    stack.push(next);
+                } else {
+                    stack.pop();
+                }
+            }
+
+            playerPos = { x: 0, y: 0 };
+            goalPos = { x: mazeSize - 1, y: mazeSize - 1 };
+            
+            moves = 0;
+            document.getElementById('moves').textContent = moves;
+            document.getElementById('time').textContent = '0:00';
+            
+            if (timerInterval) clearInterval(timerInterval);
+            startTime = null;
+            gameActive = true;
+
+            resizeCanvas();
+            drawMaze();
+        }
+
+        function getUnvisitedNeighbors(cell) {
+            const neighbors = [];
+            const { x, y } = cell;
+
+            if (y > 0 && !maze[y - 1][x].visited) neighbors.push(maze[y - 1][x]);
+            if (x < mazeSize - 1 && !maze[y][x + 1].visited) neighbors.push(maze[y][x + 1]);
+            if (y < mazeSize - 1 && !maze[y + 1][x].visited) neighbors.push(maze[y + 1][x]);
+            if (x > 0 && !maze[y][x - 1].visited) neighbors.push(maze[y][x - 1]);
+
+            return neighbors;
+        }
+
+        function removeWall(current, next) {
+            const dx = next.x - current.x;
+            const dy = next.y - current.y;
+
+            if (dx === 1) {
+                current.walls.right = false;
+                next.walls.left = false;
+            } else if (dx === -1) {
+                current.walls.left = false;
+                next.walls.right = false;
+            } else if (dy === 1) {
+                current.walls.bottom = false;
+                next.walls.top = false;
+            } else if (dy === -1) {
+                current.walls.top = false;
+                next.walls.bottom = false;
+            }
+        }
+
+        function resizeCanvas() {
+            const container = document.querySelector('.maze-container');
+            const maxSize = Math.min(container.clientWidth - 20, 700);
+            cellSize = Math.floor(maxSize / mazeSize);
+            canvas.width = cellSize * mazeSize;
+            canvas.height = cellSize * mazeSize;
+        }
+
+        function drawMaze() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw cells
+            for (let y = 0; y < mazeSize; y++) {
+                for (let x = 0; x < mazeSize; x++) {
+                    const cell = maze[y][x];
+                    const px = x * cellSize;
+                    const py = y * cellSize;
+
+                    ctx.strokeStyle = '#333';
+                    ctx.lineWidth = 2;
+
+                    if (cell.walls.top) {
+                        ctx.beginPath();
+                        ctx.moveTo(px, py);
+                        ctx.lineTo(px + cellSize, py);
+                        ctx.stroke();
+                    }
+                    if (cell.walls.right) {
+                        ctx.beginPath();
+                        ctx.moveTo(px + cellSize, py);
+                        ctx.lineTo(px + cellSize, py + cellSize);
+                        ctx.stroke();
+                    }
+                    if (cell.walls.bottom) {
+                        ctx.beginPath();
+                        ctx.moveTo(px, py + cellSize);
+                        ctx.lineTo(px + cellSize, py + cellSize);
+                        ctx.stroke();
+                    }
+                    if (cell.walls.left) {
+                        ctx.beginPath();
+                        ctx.moveTo(px, py);
+                        ctx.lineTo(px, py + cellSize);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw goal
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(goalPos.x * cellSize + 5, goalPos.y * cellSize + 5, cellSize - 10, cellSize - 10);
+
+            // Draw player
+            ctx.fillStyle = '#2196F3';
+            ctx.beginPath();
+            ctx.arc(
+                playerPos.x * cellSize + cellSize / 2,
+                playerPos.y * cellSize + cellSize / 2,
+                cellSize / 3,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+        }
+
+        function movePlayer(dx, dy) {
+            if (!gameActive) return;
+
+            if (!startTime) {
+                startTime = Date.now();
+                timerInterval = setInterval(updateTimer, 1000);
+            }
+
+            const newX = playerPos.x + dx;
+            const newY = playerPos.y + dy;
+
+            if (newX < 0 || newX >= mazeSize || newY < 0 || newY >= mazeSize) return;
+
+            const currentCell = maze[playerPos.y][playerPos.x];
+            
+            if (dx === 1 && currentCell.walls.right) return;
+            if (dx === -1 && currentCell.walls.left) return;
+            if (dy === 1 && currentCell.walls.bottom) return;
+            if (dy === -1 && currentCell.walls.top) return;
+
+            playerPos.x = newX;
+            playerPos.y = newY;
+            moves++;
+            document.getElementById('moves').textContent = moves;
+
+            drawMaze();
+
+            if (playerPos.x === goalPos.x && playerPos.y === goalPos.y) {
+                winGame();
+            }
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('time').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function winGame() {
+            gameActive = false;
+            clearInterval(timerInterval);
+
+            if (!bestMoves || moves < parseInt(bestMoves)) {
+                bestMoves = moves;
+                localStorage.setItem('bestMoves', bestMoves);
+                document.getElementById('bestMoves').textContent = bestMoves;
+            }
+
+            document.getElementById('finalMoves').textContent = moves;
+            document.getElementById('finalTime').textContent = document.getElementById('time').textContent;
+            document.getElementById('victoryMessage').style.display = 'block';
+        }
+
+        function closeVictory() {
+            document.getElementById('victoryMessage').style.display = 'none';
+            generateMaze();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    e.preventDefault();
+                    movePlayer(0, -1);
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    e.preventDefault();
+                    movePlayer(0, 1);
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    e.preventDefault();
+                    movePlayer(-1, 0);
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    e.preventDefault();
+                    movePlayer(1, 0);
+                    break;
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            drawMaze();
+        });
+
+        // Mobile touch controls
+        document.getElementById('btnUp')?.addEventListener('click', () => movePlayer(0, -1));
+        document.getElementById('btnDown')?.addEventListener('click', () => movePlayer(0, 1));
+        document.getElementById('btnLeft')?.addEventListener('click', () => movePlayer(-1, 0));
+        document.getElementById('btnRight')?.addEventListener('click', () => movePlayer(1, 0));
+
+        // Prevent mobile scroll when touching buttons
+        document.querySelectorAll('.dpad-button').forEach(btn => {
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+            });
+        });
+
+        // Generate initial maze
+        generateMaze();
+    </script>
+</body>
+</html>
